@@ -25,3 +25,5 @@ greeting-action/
 ├── package.json
 └── dist/index.js   # single-file bundle built by: npm run build  (ncc)
 ```
+
+_PR demo: triggers pull_request event on main._
