@@ -31836,9 +31836,11 @@ var __webpack_exports__ = {};
 const core = __nccwpck_require__(7484);
 const github = __nccwpck_require__(3228);
 
+const VERSION = '1.0.1';
+
 try {
   const nameToGreet = core.getInput('who-to-greet');
-  console.log(`Hello ${nameToGreet}! Greetings from a custom JavaScript action.`);
+  console.log(`Hello ${nameToGreet}! Greetings from a custom JavaScript action (v${VERSION}).`);
 
   const time = new Date().toTimeString();
   core.setOutput('time', time);

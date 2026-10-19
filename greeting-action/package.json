@@ -1,6 +1,6 @@
 {
   "name": "student-greeting-action",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Custom JS action for GitHub Actions course",
   "main": "index.js",
   "scripts": {
