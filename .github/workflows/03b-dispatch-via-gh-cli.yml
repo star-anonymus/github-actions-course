@@ -1,0 +1,37 @@
+# Module 2C (CLI part) — trigger the manual workflow with the GitHub CLI.
+# Same command you would type locally:
+#   gh workflow run 03-manual-dispatch.yml -f name=Shehryar -f greeting=Welcome -f data="from gh CLI"
+name: "M2C - Trigger workflow_dispatch via gh CLI"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  gh-cli:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: gh --version
+        run: gh --version
+
+      - name: gh workflow list
+        run: gh workflow list
+
+      - name: gh workflow run (with inputs)
+        run: |
+          set -x
+          gh workflow run 03-manual-dispatch.yml \
+            -f name="Shehryar Ahmed" \
+            -f greeting=Welcome \
+            -f data="Triggered from GitHub CLI (gh workflow run)"
+
+      - name: gh run list (latest runs of the manual workflow)
+        run: |
+          sleep 8
+          gh run list --workflow=03-manual-dispatch.yml --limit 5
