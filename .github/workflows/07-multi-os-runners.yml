@@ -1,0 +1,61 @@
+# Module 5A — GitHub-hosted runners on Ubuntu, Windows and macOS
+name: "M5A - Multi-OS Hosted Runners"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: OS info (bash)
+        run: |
+          echo "Runner OS: ${{ runner.os }}"
+          cat /etc/os-release | head -4
+          uname -a
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: OS info (PowerShell)
+        shell: pwsh
+        run: |
+          Write-Host "Runner OS: ${{ runner.os }}"
+          Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, OSArchitecture | Format-List
+          $PSVersionTable.PSVersion
+
+      - name: Chocolatey package manager
+        shell: pwsh
+        run: |
+          choco --version
+          choco list --limit-output | Select-Object -First 10
+
+      - name: PowerShell script
+        shell: pwsh
+        run: |
+          $files = 1..3 | ForEach-Object { "file$_.txt" }
+          $files | ForEach-Object { Set-Content -Path $_ -Value "Created on Windows runner by ${{ github.actor }}" }
+          Get-ChildItem *.txt | Format-Table Name, Length
+          Get-Content file1.txt
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: OS info
+        run: |
+          echo "Runner OS: ${{ runner.os }}"
+          sw_vers
+          uname -m
+
+      - name: Compile and run Swift
+        run: |
+          swift --version
+          cat > hello.swift <<'EOF'
+          let name = "${{ github.actor }}"
+          print("Hello from Swift on macOS, \(name)!")
+          for i in 1...3 { print("Swift loop \(i)") }
+          EOF
+          swiftc hello.swift -o hello
+          ./hello

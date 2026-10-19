@@ -1,0 +1,35 @@
+# Module 7 — Invoke the custom JavaScript action
+# Local path version (same repo) and released tag version (v1.0.0).
+name: "M7 - Custom JavaScript Action"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  local-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run custom action from local path
+        id: greet
+        uses: ./greeting-action
+        with:
+          who-to-greet: ${{ github.actor }}
+
+      - name: Use the action's output
+        run: echo "Greeting was generated at ${{ steps.greet.outputs.time }}"
+
+  released-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run custom action from released tag v1.0.0
+        id: greet
+        uses: star-anonymus/github-actions-course/greeting-action@v1.0.0
+        with:
+          who-to-greet: "${{ github.actor }} (via v1.0.0 tag)"
+
+      - name: Use the action's output
+        run: echo "Greeting was generated at ${{ steps.greet.outputs.time }}"

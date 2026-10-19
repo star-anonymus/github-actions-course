@@ -1,0 +1,12 @@
+{
+  "name": "course-sample-app",
+  "version": "1.0.0",
+  "description": "Tiny Node app used by matrix + caching workflows",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}

@@ -1,0 +1,20 @@
+# Module 5B — Job targeted at a self-hosted runner
+# Register a runner first: Settings -> Actions -> Runners -> New self-hosted runner
+# (add custom label "my-laptop" during ./config). Then run this workflow manually.
+name: "M5B - Self-Hosted Runner Job"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  on-my-machine:
+    runs-on: [self-hosted]
+    steps:
+      - name: Where am I running?
+        run: |
+          echo "Runner name : ${{ runner.name }}"
+          echo "Runner OS   : ${{ runner.os }}"
+          echo "Runner arch : ${{ runner.arch }}"
+          echo "Actor       : ${{ github.actor }}"
+          echo "Hostname    : $(hostname)"
+          echo "Work dir    : $(pwd)"

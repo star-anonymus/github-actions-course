@@ -1,0 +1,45 @@
+# Module 6A — Matrix strategy across operating systems and Node.js versions
+name: "M6A - Matrix Build"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [18, 20, 22]
+        exclude:
+          - os: macos-latest
+            node: 18
+        include:
+          - os: ubuntu-latest
+            node: 22
+            experimental: true
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Show matrix combination
+        shell: bash
+        run: |
+          echo "OS=${{ matrix.os }}  Node=${{ matrix.node }}  experimental=${{ matrix.experimental || false }}"
+          node --version
+
+      - name: Install & test
+        run: |
+          npm ci
+          npm test

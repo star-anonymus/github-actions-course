@@ -1,0 +1,32 @@
+# Module 2A — Single & Multiple Event Triggers
+name: "M2A - Push & Pull Request Triggers"
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  event-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Show which event triggered this run
+        run: |
+          echo "Event name : ${{ github.event_name }}"
+          echo "Branch/ref : ${{ github.ref }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Commit SHA : ${{ github.sha }}"
+
+      - name: Runs only on pull_request
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+          echo "Merging ${{ github.head_ref }} -> ${{ github.base_ref }}"
+
+      - name: Runs only on push
+        if: github.event_name == 'push'
+        run: echo "Push to ${{ github.ref_name }} by ${{ github.actor }}"

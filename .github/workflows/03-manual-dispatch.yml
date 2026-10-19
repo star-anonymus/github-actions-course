@@ -1,0 +1,35 @@
+# Module 2C — Manual Triggers (workflow_dispatch)
+# Run from UI: Actions -> "M2C - Manual workflow_dispatch" -> Run workflow
+# Run from CLI:
+#   gh workflow run 03-manual-dispatch.yml -f name=Shehryar -f greeting=Salam -f data="from CLI"
+name: "M2C - Manual workflow_dispatch"
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Who to greet"
+        required: true
+        default: "Student"
+        type: string
+      greeting:
+        description: "Greeting word"
+        required: true
+        default: "Hello"
+        type: choice
+        options: [Hello, Salam, Hi, Welcome]
+      data:
+        description: "Any extra data"
+        required: false
+        default: "No extra data"
+        type: string
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print inputs
+        run: |
+          echo "${{ inputs.greeting }}, ${{ inputs.name }}!"
+          echo "Extra data: ${{ inputs.data }}"
+          echo "Started manually by: ${{ github.actor }}"

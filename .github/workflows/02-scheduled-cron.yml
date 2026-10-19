@@ -1,0 +1,21 @@
+# Module 2B — Scheduled Events (Cron)
+# NOTE: schedule only runs on the DEFAULT branch (main).
+# GitHub may delay scheduled runs during high load; shortest interval is 5 minutes.
+# After you take the screenshot, comment out the schedule block so it stops using minutes.
+name: "M2B - Scheduled Cron Workflow"
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # every 5 minutes (UTC)
+  workflow_dispatch:         # also allow a manual run for testing
+
+jobs:
+  cron-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print schedule info
+        run: |
+          echo "Event       : ${{ github.event_name }}"
+          echo "Cron        : ${{ github.event.schedule }}"
+          echo "Branch      : ${{ github.ref_name }}"
+          echo "Run time UTC: $(date -u)"

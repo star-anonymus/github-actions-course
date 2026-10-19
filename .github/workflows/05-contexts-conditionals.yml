@@ -1,0 +1,101 @@
+# Module 3 — Architecture (Workflow -> Event -> Jobs -> Steps -> Actions -> Runners),
+# context objects and if: conditionals with status-check functions.
+name: "M3 - Contexts, Expressions & Conditionals"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_fail:
+        description: "Make the 'maybe-fail' step fail (to see failure())"
+        type: boolean
+        default: false
+
+env:                         # workflow-level env (env context)
+  COURSE: "GitHub Actions Certification"
+
+jobs:
+  # Job 1 — inspect context objects
+  contexts:
+    runs-on: ubuntu-latest   # Runner
+    env:
+      JOB_LEVEL: "set at job level"
+    outputs:
+      os: ${{ steps.osinfo.outputs.os }}
+    steps:                   # Steps
+      - uses: actions/checkout@v4      # Action (from Marketplace)
+
+      - name: github context
+        run: |
+          echo "github.actor      = ${{ github.actor }}"
+          echo "github.event_name = ${{ github.event_name }}"
+          echo "github.repository = ${{ github.repository }}"
+          echo "github.ref_name   = ${{ github.ref_name }}"
+          echo "github.run_number = ${{ github.run_number }}"
+
+      - name: runner context
+        id: osinfo
+        run: |
+          echo "runner.os   = ${{ runner.os }}"
+          echo "runner.arch = ${{ runner.arch }}"
+          echo "runner.name = ${{ runner.name }}"
+          echo "os=${{ runner.os }}" >> "$GITHUB_OUTPUT"
+
+      - name: env & vars context
+        env:
+          STEP_LEVEL: "set at step level"
+        run: |
+          echo "env.COURSE     = ${{ env.COURSE }}"
+          echo "env.JOB_LEVEL  = ${{ env.JOB_LEVEL }}"
+          echo "env.STEP_LEVEL = ${{ env.STEP_LEVEL }}"
+          echo "vars.MY_VAR    = ${{ vars.MY_VAR || '(repository variable not set yet)' }}"
+
+      - name: job context & toJSON()
+        env:
+          HEAD_COMMIT: ${{ toJSON(github.event.head_commit) }}
+        run: |
+          echo "job.status = ${{ job.status }}"
+          echo "github.event.head_commit (JSON, truncated):"
+          echo "$HEAD_COMMIT" | head -20
+
+  # Job 2 — depends on job 1 (needs) => runs sequentially
+  conditionals:
+    needs: contexts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Uses output of previous job (needs context)
+        run: echo "Previous job ran on ${{ needs.contexts.outputs.os }}"
+
+      - name: contains() — only if commit message contains 'deploy'
+        if: contains(github.event.head_commit.message, 'deploy')
+        run: echo "Commit message contains 'deploy'"
+
+      - name: contains() — only if actor name contains 'star'
+        if: contains(github.actor, 'star')
+        run: echo "Actor ${{ github.actor }} contains 'star'"
+
+      - name: startsWith() / endsWith()
+        if: startsWith(github.ref, 'refs/heads/') && endsWith(github.repository, 'course')
+        run: echo "Running on a branch of a *-course repo"
+
+      - name: maybe-fail
+        id: maybe
+        continue-on-error: true
+        run: |
+          if [ "${{ inputs.force_fail }}" = "true" ]; then
+            echo "Failing on purpose"; exit 1
+          fi
+          echo "Not failing"
+
+      - name: success() — runs when everything before succeeded
+        if: success()
+        run: echo "All previous steps succeeded"
+
+      - name: failure() — runs only if a previous step failed
+        if: failure() || steps.maybe.outcome == 'failure'
+        run: echo "A previous step failed (outcome=${{ steps.maybe.outcome }})"
+
+      - name: always() — runs no matter what
+        if: always()
+        run: echo "This step always runs. Job status = ${{ job.status }}"

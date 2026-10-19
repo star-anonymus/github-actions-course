@@ -1,0 +1,17 @@
+name: 'Student Greeting Action'
+description: 'Custom JavaScript action that greets a user and outputs the time'
+author: 'star-anonymus'
+inputs:
+  who-to-greet:
+    description: 'Who to greet'
+    required: true
+    default: 'World'
+outputs:
+  time:
+    description: 'The time the greeting was generated'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+branding:
+  icon: 'smile'
+  color: 'green'

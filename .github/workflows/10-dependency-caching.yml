@@ -1,0 +1,61 @@
+# Module 6B — Dependency caching with actions/cache (and setup-node built-in cache)
+# Run it twice: 1st run = cache MISS + "Cache saved", 2nd run = cache HIT / "Cache restored".
+name: "M6B - Dependency Caching"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  actions-cache:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache node_modules with actions/cache
+        id: npm-cache
+        uses: actions/cache@v4
+        with:
+          path: app/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('app/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Cache hit or miss?
+        run: |
+          echo "cache-hit = ${{ steps.npm-cache.outputs.cache-hit }}"
+          if [ "${{ steps.npm-cache.outputs.cache-hit }}" = "true" ]; then
+            echo "Cache HIT — skipping npm install"
+          else
+            echo "Cache MISS — installing dependencies"
+          fi
+
+      - name: Install dependencies (only on cache miss)
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+  setup-node-cache:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm test

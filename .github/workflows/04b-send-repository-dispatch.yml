@@ -1,0 +1,29 @@
+# Module 2D (helper) — sends a repository_dispatch with curl from inside Actions.
+# repository_dispatch is one of the two events that GITHUB_TOKEN IS allowed to trigger,
+# so this shows the exact curl POST + HTTP 204 response in the log.
+name: "M2D - Send repository_dispatch via curl"
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Message to send in client_payload"
+        default: "Hello from curl"
+
+permissions:
+  contents: write   # required for POST /repos/{owner}/{repo}/dispatches
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST /dispatches with curl
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -i -sS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type":"custom-webhook","client_payload":{"message":"${{ inputs.message }}","sent_by":"${{ github.actor }}"}}'

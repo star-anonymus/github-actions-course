@@ -1,0 +1,69 @@
+# Module 6C — Service containers (PostgreSQL + Redis) for integration tests.
+# Service containers need a Linux runner (ubuntu-*) because they use Docker.
+name: "M6C - Service Containers"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # Job runs directly on the runner VM -> reach services via localhost + mapped ports
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: student
+          POSTGRES_PASSWORD: student_pw
+          POSTGRES_DB: coursedb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Show running containers
+        run: docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Ports}}\t{{.Status}}"
+
+      - name: PostgreSQL integration queries
+        env:
+          PGPASSWORD: student_pw
+        run: |
+          psql -h localhost -p 5432 -U student -d coursedb -c "CREATE TABLE students (id SERIAL PRIMARY KEY, name TEXT, module TEXT);"
+          psql -h localhost -p 5432 -U student -d coursedb -c "INSERT INTO students (name, module) VALUES ('${{ github.actor }}', 'Module 6C'), ('Test User', 'Module 7');"
+          psql -h localhost -p 5432 -U student -d coursedb -c "SELECT * FROM students;"
+          psql -h localhost -p 5432 -U student -d coursedb -c "SELECT version();"
+
+      - name: Redis integration commands
+        run: |
+          sudo apt-get install -y -qq redis-tools > /dev/null
+          redis-cli -h localhost -p 6379 PING
+          redis-cli -h localhost -p 6379 SET course "GitHub Actions"
+          redis-cli -h localhost -p 6379 GET course
+
+  # Job runs inside a container -> reach services by their label (hostname)
+  container-job:
+    runs-on: ubuntu-latest
+    container: node:20
+    services:
+      redis:
+        image: redis:7
+    steps:
+      - name: Talk to Redis by service name
+        run: |
+          apt-get update -qq && apt-get install -y -qq redis-tools > /dev/null
+          redis-cli -h redis PING
+          redis-cli -h redis INCR visits
